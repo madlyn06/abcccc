@@ -15,7 +15,7 @@ function ModalAdd({ setShowAdd }) {
       const response = await http.get(`/categories`)
       setCategory(response?.data || [])
     }
-  }, [form])
+  }, [])
 
   const handleKeyDown = (event, prop) => {
     if (prop === 'size') {
@@ -37,7 +37,13 @@ function ModalAdd({ setShowAdd }) {
   const handleSubmit = async (event) => {
     event.preventDefault()
     console.log(form, 'form')
-    const result = await http.post('product', { ...form, colors: color, sizes: size })
+    await http.post('product', {
+      ...form,
+      colors: color,
+      sizes: size,
+      price: +form.price,
+      discount: +form.discount
+    })
     setShowAdd(false)
   }
   return (
