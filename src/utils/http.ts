@@ -8,6 +8,7 @@ export class Http {
     this.accessToken = getAccessTokenFromLS()
     this.instance = axios.create({
       baseURL: 'http://0.tcp.ap.ngrok.io:14755/api/v1/',
+      // baseURL: 'http://localhost/api/v1/',
       headers: {
         'Content-Type': 'application/json'
       }

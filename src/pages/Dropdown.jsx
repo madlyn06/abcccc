@@ -1,6 +1,7 @@
 import React from 'react'
 
 function Dropdown({ setEdit, id, setId }) {
+  console.log(id, 'id')
   return (
     <div
       id='apple-imac-27-dropdown'

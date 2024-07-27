@@ -218,7 +218,7 @@ function Admin() {
                           anchorSelect='#clickable'
                           clickable
                         >
-                          <Dropdown setEdit={setEdit} id={product?._id} setId={setId} />
+                          <Dropdown setEdit={setEdit} id={product?.id} setId={setId} />
                         </Tooltip>
                         {/* {option && } */}
                       </td>

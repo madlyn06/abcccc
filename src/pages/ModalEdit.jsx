@@ -1,3 +1,4 @@
+import http from '@/utils/http'
 import React, { useEffect, useState } from 'react'
 
 function ModalEdit({ setEdit, id }) {
@@ -35,7 +36,7 @@ function ModalEdit({ setEdit, id }) {
   }
   const handleSubmit = async (event) => {
     event.preventDefault()
-    console.log(form, 'form')
+    console.log(id, 'form')
     await http.put(`product/${id}`, {
       ...form,
       colors: color,
@@ -43,7 +44,7 @@ function ModalEdit({ setEdit, id }) {
       price: +form.price,
       discount: +form.discount
     })
-    setShowAdd(false)
+    setEdit(false)
   }
   return (
     <div
@@ -60,7 +61,7 @@ function ModalEdit({ setEdit, id }) {
             <h3 className='text-lg font-semibold text-gray-900 '>Update Product</h3>
             <button
               type='button'
-              onClick={() => setShowAdd(false)}
+              onClick={() => setEdit(false)}
               className='text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-dark'
               data-modal-target='createProductModal'
               data-modal-toggle='createProductModal'
