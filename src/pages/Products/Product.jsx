@@ -1,28 +1,33 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import './assets/style.css'
 import http from '@/utils/http'
 import { input } from '@material-tailwind/react'
 import 'react-tooltip/dist/react-tooltip.css'
 import { Tooltip } from 'react-tooltip'
+import { Link, useNavigate } from 'react-router-dom'
+import { AppContext } from '@/contexts/app.context'
 function Product() {
   const [product, setProduct] = useState([])
-  const [search,setSearch] = useState(false)
-  const [inputValue, setInputValue] = useState('');
+  const [search, setSearch] = useState(false)
+  const [inputValue, setInputValue] = useState('')
   const [category, setCategory] = useState([])
+  const { openCart, setOpenCart } = useContext(AppContext)
+
+  const navigate = useNavigate()
   const handleInputChange = (event) => {
-    setInputValue(event.target.value);
-  };
+    setInputValue(event.target.value)
+  }
   const handleKeyPress = (event) => {
     if (event.key === 'Enter') {
       fetchProduct(inputValue)
     }
-  };
+  }
   useEffect(() => {
     fetchProduct()
     fetchCategory()
   }, [])
 
-  const fetchProduct = async (keyword = "") => {
+  const fetchProduct = async (keyword = '') => {
     const response = await http.get(`/product?page=1&limit=10&keyword=${keyword}&category=aa`)
     setProduct(response?.data?.productResponses || [])
   }
@@ -93,7 +98,11 @@ function Product() {
                 <path d='M12 2C9.243 2 7 4.243 7 7s2.243 5 5 5 5-2.243 5-5S14.757 2 12 2zM12 10c-1.654 0-3-1.346-3-3s1.346-3 3-3 3 1.346 3 3S13.654 10 12 10zM21 21v-1c0-3.859-3.141-7-7-7h-4c-3.86 0-7 3.141-7 7v1h2v-1c0-2.757 2.243-5 5-5h4c2.757 0 5 2.243 5 5v1H21z' />
               </svg>
             </a>
-            <a className='pl-3 inline-block no-underline hover:text-black' href='#'>
+            <a
+              className='pl-3 inline-block no-underline cursor-pointer hover:text-black'
+              href='#'
+              onClick={() => setOpenCart(true)}
+            >
               <svg
                 className='fill-current hover:text-black'
                 xmlns='http://www.w3.org/2000/svg'
@@ -280,7 +289,7 @@ Alternatively if you want to just have a single hero
                 Store
               </a>
               <div className='flex items-center' id='store-nav-content'>
-                <a id="clickable" className='pl-3 inline-block no-underline hover:text-black' href='#'>
+                <a id='clickable' className='pl-3 inline-block no-underline hover:text-black' href='#'>
                   <svg
                     className='fill-current hover:text-black'
                     xmlns='http://www.w3.org/2000/svg'
@@ -291,14 +300,29 @@ Alternatively if you want to just have a single hero
                     <path d='M7 11H17V13H7zM4 7H20V9H4zM10 15H14V17H10z' />
                   </svg>
                 </a>
-<Tooltip place='bottom' style={{ borderRadius: "8px" }}  anchorSelect="#clickable" clickable>
-  {category.length > 0 && category.map((item) => <div className='w-52 py-1 cursor-pointer hover:bg-blue-gray-200 px-1 rounded-md' key={item?.id}>{item.name}</div>)}
-</Tooltip>
-                {search && <input className='border ml-10 px-3 py-2  border-cyan-500 rounded-lg' value={inputValue}
-        onChange={handleInputChange}
-        onKeyPress={handleKeyPress}
-        placeholder="Tìm kiếm sản phẩm" type="text" />}
-                <a className='pl-3 inline-block no-underline hover:text-black' href='#' onClick={() => setSearch(!search)}>
+                <Tooltip place='bottom' style={{ borderRadius: '8px' }} anchorSelect='#clickable' clickable>
+                  {category.length > 0 &&
+                    category.map((item) => (
+                      <div className='w-52 py-1 cursor-pointer hover:bg-blue-gray-200 px-1 rounded-md' key={item?.id}>
+                        {item.name}
+                      </div>
+                    ))}
+                </Tooltip>
+                {search && (
+                  <input
+                    className='border ml-10 px-3 py-2  border-cyan-500 rounded-lg'
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    onKeyPress={handleKeyPress}
+                    placeholder='Tìm kiếm sản phẩm'
+                    type='text'
+                  />
+                )}
+                <a
+                  className='pl-3 inline-block no-underline hover:text-black'
+                  href='#'
+                  onClick={() => setSearch(!search)}
+                >
                   <svg
                     className='fill-current hover:text-black'
                     xmlns='http://www.w3.org/2000/svg'
@@ -312,29 +336,24 @@ Alternatively if you want to just have a single hero
               </div>
             </div>
           </nav>
-          {product.length > 0 && product.map((item) => (
-            
-          <div key={item?.id} className='w-full md:w-1/3 xl:w-1/4 p-6 flex flex-col'>
-            <a href='#'>
-              <img
-                className='hover:grow hover:shadow-lg'
-                src={item?.images[0]}
-              />
-              <div className='pt-3 flex items-center justify-between'>
-                <p className="pt-1 text-gray-900 font-semibold truncate">{item?.name}</p>
-                
+          {product.length > 0 &&
+            product.map((item) => (
+              <div key={item?.id} className='w-full cursor-pointer md:w-1/3 xl:w-1/4 p-6 flex flex-col'>
+                <div onClick={() => navigate(`/detail/${item?.id}`)}>
+                  <img className='hover:grow hover:shadow-lg' src={item?.images[0]?.url} />
+                  <div className='pt-3 flex items-center justify-between'>
+                    <p className='pt-1 text-gray-900 font-semibold truncate'>{item?.name}</p>
+                  </div>
+                  <div className='flex gap-2 items-center'>
+                    <p className='pt-1 text-gray-900 font-semibold'>{item?.sumPrice}$</p>
+                    <p className='pt-1 text-white font-semibold px-2 py-1 rounded-xl text-xs bg-[#ff2c00]'>
+                      -{item?.discount}%
+                    </p>
+                    <p className='pt-1 text-gray-900/40 line-through font-semibold'>{item?.price}$</p>
+                  </div>
+                </div>
               </div>
-              <div className='flex gap-2 items-center'> 
-                <p className='pt-1 text-gray-900 font-semibold'>{item?.sumPrice}$</p>
-                <p className='pt-1 text-white font-semibold px-2 py-1 rounded-xl text-xs bg-[#ff2c00]'>-{item?.discount}%</p>
-                <p className='pt-1 text-gray-900/40 line-through font-semibold'>{item?.price}$</p>
-              </div>
-              
-
-            </a>
-          </div>
-          ))}
-          
+            ))}
         </div>
       </section>
       <section className='bg-white py-8'>
