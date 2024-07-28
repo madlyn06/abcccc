@@ -7,7 +7,9 @@ export const getInitialAppContext = () => ({
   profile: getProfileFromLS(),
   setProfile: () => null,
   openCart: false,
-  setOpenCart: () => null
+  setOpenCart: () => null,
+  reload: false,
+  setReload: () => null
 })
 
 const initialAppContext = getInitialAppContext()
@@ -18,6 +20,7 @@ export const AppProvider = ({ children, defaultValue = initialAppContext }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(defaultValue.isAuthenticated)
   const [profile, setProfile] = useState(defaultValue.profile)
   const [openCart, setOpenCart] = useState(false)
+  const [reload, setReload] = useState(false)
 
   return (
     <AppContext.Provider
@@ -27,7 +30,9 @@ export const AppProvider = ({ children, defaultValue = initialAppContext }) => {
         profile,
         setProfile,
         openCart,
-        setOpenCart
+        setOpenCart,
+        setReload,
+        reload
       }}
     >
       {children}

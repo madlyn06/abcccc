@@ -36,7 +36,6 @@ function ModalAdd({ setShowAdd }) {
   }
   const handleSubmit = async (event) => {
     event.preventDefault()
-    console.log(form, 'form')
     await http.post('product', {
       ...form,
       colors: color,

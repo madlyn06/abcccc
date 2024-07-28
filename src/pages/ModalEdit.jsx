@@ -1,3 +1,4 @@
+import { url } from '@/constant/constant'
 import http from '@/utils/http'
 import React, { useEffect, useState } from 'react'
 
@@ -6,6 +7,8 @@ function ModalEdit({ setEdit, id }) {
   const [size, setSize] = useState([])
   const [form, setForm] = useState({})
   const [category, setCategory] = useState([])
+  const [images, setImages] = useState([])
+  const [file, setFile] = useState(null) // ( < File) | (null > null)
   const handleChange = (event) => {
     setForm((prev) => ({ ...prev, [event.target.name]: event.target.value }))
   }
@@ -15,8 +18,37 @@ function ModalEdit({ setEdit, id }) {
       const response = await http.get(`/categories`)
       setCategory(response?.data || [])
     }
+    // fetchUpload()
   }, [])
-
+  const handleDelteImage = async (id) => {
+    console.log(id)
+    await http.delete(`/product/images/${id}`)
+    fetchForm()
+  }
+  // const fetchUpload = async (event) => {
+  //   const response = await http.get(`/product/images/${id}`)
+  //   setImages(response.data)
+  // }
+  useEffect(() => {
+    fetchForm()
+  }, [])
+  async function fetchForm() {
+    const response = await http.get(`/product/${id}`)
+    setImages(response.data.images)
+    const form = {
+      name: response?.data?.name,
+      description: response?.data?.description,
+      price: response?.data?.price,
+      discount: response?.data?.discount,
+      colors: response?.data?.colors,
+      sizes: response?.data?.sizes
+    }
+    const color = response?.data?.colors.map((item) => item.name)
+    const size = response?.data?.sizes.map((item) => item.name)
+    setColor(color)
+    setSize(size)
+    setForm(form)
+  }
   const handleKeyDown = (event, prop) => {
     if (prop === 'size') {
       if (event.key === 'Enter') {
@@ -36,7 +68,6 @@ function ModalEdit({ setEdit, id }) {
   }
   const handleSubmit = async (event) => {
     event.preventDefault()
-    console.log(id, 'form')
     await http.put(`product/${id}`, {
       ...form,
       colors: color,
@@ -45,6 +76,18 @@ function ModalEdit({ setEdit, id }) {
       discount: +form.discount
     })
     setEdit(false)
+  }
+  async function handleUpload(event) {
+    const formData = new FormData()
+    for (let i = 0; i < file.length; i++) {
+      formData.append('images', file[i])
+    }
+    await http.post(`/product/images/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    fetchForm()
   }
   return (
     <div
@@ -93,6 +136,7 @@ function ModalEdit({ setEdit, id }) {
                   type='text'
                   name='name'
                   id='name'
+                  defaultValue={form?.name}
                   className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5'
                   placeholder='Type product name'
                   required
@@ -107,6 +151,7 @@ function ModalEdit({ setEdit, id }) {
                   type='text'
                   name='price'
                   id='brand'
+                  defaultValue={form?.price}
                   className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 '
                   placeholder='$1550'
                   required
@@ -121,6 +166,7 @@ function ModalEdit({ setEdit, id }) {
                 <input
                   name='discount'
                   id='price'
+                  defaultValue={form?.discount}
                   className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 '
                   placeholder='15%'
                   required
@@ -199,6 +245,7 @@ function ModalEdit({ setEdit, id }) {
                 </label>
                 <select
                   id='category'
+                  defaultValue={form?.category_id}
                   className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 '
                   name='category_id'
                   onChange={handleChange}
@@ -219,12 +266,66 @@ function ModalEdit({ setEdit, id }) {
                   id='description'
                   rows={4}
                   name='description'
+                  defaultValue={form?.description}
                   className='block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-primary-500 focus:border-primary-500 '
                   placeholder='Write product description here'
-                  defaultValue={''}
                   onChange={handleChange}
                 />
               </div>
+            </div>
+            <div className='flex gap-8 w-full'>
+              <div>
+                <label className='block mb-2 text-sm font-medium text-gray-900 dark:text-white' htmlFor='file_input'>
+                  Upload file
+                </label>
+                <input
+                  multiple
+                  onChange={(e) => {
+                    const file = e.target.files
+                    if (file.length > 0) {
+                      setFile(file)
+                    }
+                  }}
+                  className='block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400'
+                  id='file_input'
+                  type='file'
+                />
+              </div>
+              <button
+                type='button'
+                onClick={handleUpload}
+                className='focus:outline-none h-10 items-center  text-white bg-[#ff4e00]  font-medium rounded-lg text-xs px-5 py-1 me-2 mb-2 '
+              >
+                Upload
+              </button>
+            </div>
+            <div className='flex gap-2 mt-2'>
+              {images &&
+                images?.map((item, i) => (
+                  <div className='aspect-h-2  w-24 aspect-w-3 col-span-1 overflow-hidden rounded-lg relative'>
+                    <img
+                      src={`${url}${item?.url}`}
+                      alt='Model wearing plain black basic tee.'
+                      className='h-full w-full object-cover object-center'
+                    />
+                    <div className='absolute top-1 right-1 cursor-pointer' onClick={() => handleDelteImage(item?.id)}>
+                      <svg
+                        xmlns='http://www.w3.org/2000/svg'
+                        fill='none'
+                        viewBox='0 0 24 24'
+                        strokeWidth={1.5}
+                        stroke='currentColor'
+                        className='h-5 w-5 text-red-400'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          d='m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                ))}
             </div>
             <button
               type='submit'

@@ -1,38 +1,47 @@
 'use client'
 
-import { useContext, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { AppContext } from '@/contexts/app.context'
-
-const products = [
-  {
-    id: 1,
-    name: 'Throwback Hip Bag',
-    href: '#',
-    color: 'Salmon',
-    price: '$90.00',
-    quantity: 1,
-    imageSrc: 'https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-01.jpg',
-    imageAlt: 'Salmon orange fabric pouch with match zipper, gray zipper pull, and adjustable hip belt.'
-  },
-  {
-    id: 2,
-    name: 'Medium Stuff Satchel',
-    href: '#',
-    color: 'Blue',
-    price: '$32.00',
-    quantity: 1,
-    imageSrc: 'https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-02.jpg',
-    imageAlt: 'Front of satchel with blue canvas body, black straps and handle, drawstring top, and front zipper pouch.'
-  }
-  // More products...
-]
+import http from '@/utils/http'
+import { url } from '@/constant/constant'
+import { toast } from 'react-toastify'
+import { redirect, useNavigate } from 'react-router-dom'
 
 export default function ShopingCart() {
-  const { openCart: open, setOpenCart: setOpen } = useContext(AppContext)
+  const { openCart: open, setOpenCart: setOpen, profile, reload } = useContext(AppContext)
+  const [dataCart, setDataCart] = useState([])
+  const [form, setForm] = useState([])
+  const [price, setPrice] = useState(0)
+  const [images, setImages] = useState([])
+  async function fetchImage() {
+    const data = await http.get(`/cart/get-items/${profile}`)
+    setDataCart(data?.data?.itemsResponses || [])
+    let dataImg = data?.data?.itemsResponses?.map((item) => item.images[0])
+    setImages(dataImg || [])
+  }
+  const navigate = useNavigate()
+  //devops
+  useEffect(() => {
+    fetchImage()
+  }, [profile, reload])
+  async function handlePrice(event, quantity = 0, price = 1) {
+    if (event.target.checked) {
+      setPrice((prev) => prev + +quantity * +price)
+    } else {
+      setPrice((prev) => prev - +quantity * +price)
+    }
+  }
+  async function handleCheckout() {
+    if (price === 0) toast.error('Please choose a product')
+    const res = await http.get(`/payment/vn-pay?amount=${price}&backCode=NCB`)
+    // navigate(res?.data?.data?.paymentUrl || '')
+    // console.log()
+    window.location.href = res?.data?.data?.paymentUrl
+  }
   return (
-    <Dialog open={open} onClose={setOpen} className='relative z-10'>
+    <Dialog open={open} onClose={setOpen} className='relative z-40'>
       <DialogBackdrop
         transition
         className='fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity duration-500 ease-in-out data-[closed]:opacity-0'
@@ -65,17 +74,17 @@ export default function ShopingCart() {
                   <div className='mt-8'>
                     <div className='flow-root'>
                       <ul role='list' className='-my-6 divide-y divide-gray-200'>
-                        {products.map((product) => (
+                        {dataCart.map((product) => (
                           <li key={product.id} className='flex py-6'>
                             <div className='h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200'>
                               <img
                                 alt={product.imageAlt}
-                                src={product.imageSrc}
+                                src={`${url}${product?.images[0]?.url}`}
                                 className='h-full w-full object-cover object-center'
                               />
                             </div>
 
-                            <div className='ml-4 flex flex-1 flex-col'>
+                            <div className='ml-4 flex justify-between relative'>
                               <div>
                                 <div className='flex justify-between text-base font-medium text-gray-900'>
                                   <h3>
@@ -83,17 +92,38 @@ export default function ShopingCart() {
                                   </h3>
                                   <p className='ml-4'>{product.price}</p>
                                 </div>
-                                <p className='mt-1 text-sm text-gray-500'>{product.color}</p>
+                                <p className='mt-1 text-sm text-gray-900'>{product?.product?.name}</p>
+                                <p className='mt-1 text-sm text-gray-900'>Color: {product.color}</p>
+                                <p className='mt-1 text-sm text-gray-900'>Size: {product.size}</p>
+                                <p className='mt-1 text-sm text-gray-900'>Quantity: {product.quantity}</p>
+                                <p className='mt-1 text-sm text-gray-900'>
+                                  Price: ${Math.ceil(product?.product?.sumPrice)}
+                                </p>
                               </div>
                               <div className='flex flex-1 items-end justify-between text-sm'>
-                                <p className='text-gray-500'>Qty {product.quantity}</p>
-
                                 <div className='flex'>
-                                  <button type='button' className='font-medium text-indigo-600 hover:text-indigo-500'>
+                                  <button
+                                    type='button'
+                                    onClick={async () => {
+                                      await http.delete(`/cart/remove-all/${product.id}`)
+                                      fetchImage()
+                                    }}
+                                    className='font-medium text-indigo-600 hover:text-indigo-500'
+                                  >
                                     Remove
                                   </button>
                                 </div>
                               </div>
+                              <input
+                                id='bordered-checkbox-2'
+                                type='checkbox'
+                                value=''
+                                onChange={(e) =>
+                                  handlePrice(e, product.quantity, Math.ceil(product?.product?.sumPrice))
+                                }
+                                name='bordered-checkbox'
+                                class='w-4 absolute top-0 rounded-xl right-0 h-4 text-orange-300 bg-orange-300 border-gray-300  '
+                              ></input>
                             </div>
                           </li>
                         ))}
@@ -105,10 +135,10 @@ export default function ShopingCart() {
                 <div className='border-t border-gray-200 px-4 py-6 sm:px-6'>
                   <div className='flex justify-between text-base font-medium text-gray-900'>
                     <p>Subtotal</p>
-                    <p>$262.00</p>
+                    <p>${price}</p>
                   </div>
                   <p className='mt-0.5 text-sm text-gray-500'>Shipping and taxes calculated at checkout.</p>
-                  <div className='mt-6'>
+                  <div className='mt-6' onClick={() => handleCheckout()}>
                     <a
                       href='#'
                       className='flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700'
