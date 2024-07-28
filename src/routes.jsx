@@ -5,6 +5,7 @@ import Admin from './pages/Admin'
 import User from './pages/User'
 import ProductDetail from './pages/Products/ProductDetail'
 import ShopingCart from './pages/Products/ShoppingCart'
+import Invoice from './pages/Invoice'
 
 export const routes = [
   {
@@ -51,6 +52,10 @@ export const routes = [
     name: 'Admin',
     path: '/cart',
     element: <ShopingCart />
+  },
+  {
+    path: '/bill/:id',
+    element: <Invoice />
   }
 ]
 

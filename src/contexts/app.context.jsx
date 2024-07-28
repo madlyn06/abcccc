@@ -9,7 +9,11 @@ export const getInitialAppContext = () => ({
   openCart: false,
   setOpenCart: () => null,
   reload: false,
-  setReload: () => null
+  setReload: () => null,
+  cart: localStorage.getItem('cart') ? JSON.parse(localStorage.getItem('cart')) : [],
+  setCart: () => null,
+  price: 0,
+  setPrice: () => null
 })
 
 const initialAppContext = getInitialAppContext()
@@ -21,6 +25,8 @@ export const AppProvider = ({ children, defaultValue = initialAppContext }) => {
   const [profile, setProfile] = useState(defaultValue.profile)
   const [openCart, setOpenCart] = useState(false)
   const [reload, setReload] = useState(false)
+  const [cart, setCart] = useState([])
+  const [price, setPrice] = useState(0)
 
   return (
     <AppContext.Provider
@@ -32,7 +38,11 @@ export const AppProvider = ({ children, defaultValue = initialAppContext }) => {
         openCart,
         setOpenCart,
         setReload,
-        reload
+        reload,
+        setCart,
+        cart,
+        setPrice,
+        price
       }}
     >
       {children}

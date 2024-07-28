@@ -10,7 +10,15 @@ import { toast } from 'react-toastify'
 import { redirect, useNavigate } from 'react-router-dom'
 
 export default function ShopingCart() {
-  const { openCart: open, setOpenCart: setOpen, profile, reload } = useContext(AppContext)
+  const {
+    openCart: open,
+    setOpenCart: setOpen,
+    profile,
+    reload,
+    setCart,
+    cart,
+    setPrice: setTotal
+  } = useContext(AppContext)
   const [dataCart, setDataCart] = useState([])
   const [form, setForm] = useState([])
   const [price, setPrice] = useState(0)
@@ -26,13 +34,24 @@ export default function ShopingCart() {
   useEffect(() => {
     fetchImage()
   }, [profile, reload])
-  async function handlePrice(event, quantity = 0, price = 1) {
+  async function handlePrice(event, quantity = 0, price = 1, product) {
     if (event.target.checked) {
+      let arr = [...cart]
+      if (!arr.includes(product)) arr.push(product)
+      setCart(arr)
       setPrice((prev) => prev + +quantity * +price)
+      localStorage.setItem('cart', JSON.stringify(arr))
+      localStorage.setItem('price', JSON.stringify(price + +quantity * +price))
     } else {
+      let arr = [...cart]
+      if (arr.includes(product)) arr.splice(arr.indexOf(product), 1)
+      setCart(arr)
       setPrice((prev) => prev - +quantity * +price)
+      localStorage.setItem('price', JSON.stringify(price - +quantity * +price))
+      localStorage.setItem('cart', JSON.stringify(arr))
     }
   }
+  console.log(cart, 'cart')
   async function handleCheckout() {
     if (price === 0) toast.error('Please choose a product')
     const res = await http.get(`/payment/vn-pay?amount=${price}&backCode=NCB`)
@@ -119,7 +138,7 @@ export default function ShopingCart() {
                                 type='checkbox'
                                 value=''
                                 onChange={(e) =>
-                                  handlePrice(e, product.quantity, Math.ceil(product?.product?.sumPrice))
+                                  handlePrice(e, product.quantity, Math.ceil(product?.product?.sumPrice), product.id)
                                 }
                                 name='bordered-checkbox'
                                 class='w-4 absolute top-0 rounded-xl right-0 h-4 text-orange-300 bg-orange-300 border-gray-300  '
